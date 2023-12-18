@@ -1,0 +1,23 @@
+.starter__container {}
+
+.starter__container h1 {
+  font-size: 3.5em;
+  color: #ff4784;
+  margin: 0;
+}
+
+.starter__container p {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-top: 1em;
+  max-width: 400px;
+}
+
+.starter__container button {
+  margin-top: 2em;
+}
+
+.starter__container button:hover {
+  transition: 0.4s ease;
+  font-size: 1.1em;
+}

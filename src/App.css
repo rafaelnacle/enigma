@@ -1,0 +1,17 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.check_answers-btn {
+  margin-top: 2em;
+  border: 1px solid #ff4784;
+}
+
+.check_answers-btn:hover {
+  background-color: #ff4784;
+  border: 1px solid #fff;
+  transition: 0.2s ease-in-out;
+}
