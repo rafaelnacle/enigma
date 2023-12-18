@@ -71,26 +71,32 @@ function App() {
   }
 
   function handleAnswersSelection(questionId, id) {
+    // Update the questions state by mapping over the previous questions
     setQuestions((prevQuestions) =>
       prevQuestions.map((question) => {
         if (question.id === questionId) {
+          // Update the isSelected property for each answer
           const updatedAnswers = question.answers.map((answer) => ({
             ...answer,
             isSelected: answer.answerId === id ? !answer.isSelected : false,
           }));
   
+          // Find the selected answer
           const selectedAnswer = updatedAnswers.find((answer) => answer.isSelected);
   
+          // Update the selectedAnswers state object with the selected answer
           setSelectedAnswers((prevSelectedAnswers) => ({
             ...prevSelectedAnswers,
             [questionId]: selectedAnswer,
           }));
   
+          // Return the updated question with the updated answers
           return {
             ...question,
             answers: updatedAnswers,
           };
         } else {
+          // Return the unchanged question
           return question;
         }
       })
@@ -100,23 +106,27 @@ function App() {
   function checkAnswers() {
     const newAnswersChecked = !answersChecked;
     setAnswersChecked(newAnswersChecked);
-
+  
+    // Calculate the number of correct answers
     const correctAnswersCount = questions.reduce((count, question) => {
+      // Get the selected answer for the question
       const selectedAnswer = selectedAnswers[question.id];
+      // Increment the count if the selected answer is correct
       return count + (selectedAnswer && selectedAnswer.isCorrect ? 1 : 0);
     }, 0);
-
+  
+    // Display the score
     setShowScore(correctAnswersCount);
   }
 
   const questionsEl = questions.map((question, index) => {
     return <Question 
-    key={index}
-    question={question.question} 
-    answers={question.answers}
-    id={question.id}
-    handleAnswersSelection={handleAnswersSelection}
-    answersChecked={answersChecked}
+      key={index}
+      question={question.question} 
+      answers={question.answers}
+      id={question.id}
+      handleAnswersSelection={handleAnswersSelection}
+      answersChecked={answersChecked}
     />
   })
 
