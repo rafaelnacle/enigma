@@ -4,7 +4,7 @@ import Question from './components/Question';
 import Starter from './components/Starter';
 
 import { nanoid } from 'nanoid';
-import he from 'he';
+import he from 'he'; // html entities
 
 const API_URL = 'https://opentdb.com/api.php?amount=10&type=multiple';
 
@@ -17,36 +17,42 @@ function App() {
   const [answersChecked, setAnswersChecked] = useState(false);
 
   useEffect(() => {
+    const fetchData = async () => {
       try {
-        fetch(API_URL)
-          .then(res => res.json())
-          .then(data => {
-            setQuestions(data.results.map((item) => {
-                const id = nanoid();
-                const shuffledAnswers = [...item.incorrect_answers, item.correct_answer].sort();
-                const correctAnswer = item.correct_answer;
-        
-                const answers = shuffledAnswers.map((answer, index) => ({
-                  option: he.decode(answer),
-                  answerId: id + index,
-                  isCorrect: answer === correctAnswer,
-                  isSelected: false,
-                  score: 0,
-                }));
-        
-                return {
-                  question: he.decode(item.question),
-                  answers: answers,
-                  id: id,
-                }
-
-              }));
-          })
+        const res = await fetch(API_URL);
+        const data = await res.json();
   
-        return () => console.log("")
+        // Set questions state with transformed data
+        setQuestions(data.results.map((item) => {
+          const id = nanoid();
+          const shuffledAnswers = [...item.incorrect_answers, item.correct_answer].sort();
+          const correctAnswer = item.correct_answer;
+  
+          // Generate answers array with necessary properties
+          const answers = shuffledAnswers.map((answer, index) => ({
+            option: he.decode(answer),
+            answerId: id + index,
+            isCorrect: answer === correctAnswer,
+            isSelected: false,
+            score: 0,
+          }));
+  
+          // Return question object
+          return {
+            question: he.decode(item.question),
+            answers: answers,
+            id: id,
+          }
+        }));
       } catch (error) {
         console.error('Error fetching questions:', error);
       }
+    };
+  
+    fetchData();
+  
+    // Cleanup function
+    return () => console.log("");
   }, [newGame, setQuestions]);
 
   function handleStartGame() {
@@ -54,62 +60,52 @@ function App() {
   }
 
   function handleNewGame() {
-    setGameStarted(prevGameStared => !prevGameStared)
-    setNewGame(prevGame => !prevGame)
-
+    setGameStarted(!gameStarted);
+    setNewGame(!newGame);
+  
     if (answersChecked) {
-      setAnswersChecked(prevAnswersChecked => !prevAnswersChecked)
+      setAnswersChecked(!answersChecked);
     }
-
-    setShowScore(0)
+  
+    setShowScore(0);
   }
 
   function handleAnswersSelection(questionId, id) {
     setQuestions((prevQuestions) =>
       prevQuestions.map((question) => {
         if (question.id === questionId) {
-          const updatedAnswers = question.answers.map((answer) => {
-            if (answer.answerId === id) {
-              return {
-                ...answer,
-                isSelected: !answer.isSelected,
-              };
-            } else {
-              return {
-                ...answer,
-                isSelected: false,
-              };
-            }
-          });
-          
+          const updatedAnswers = question.answers.map((answer) => ({
+            ...answer,
+            isSelected: answer.answerId === id ? !answer.isSelected : false,
+          }));
+  
+          const selectedAnswer = updatedAnswers.find((answer) => answer.isSelected);
+  
           setSelectedAnswers((prevSelectedAnswers) => ({
             ...prevSelectedAnswers,
-            [questionId]: updatedAnswers.find((answer) => answer.isSelected),
+            [questionId]: selectedAnswer,
           }));
-
+  
           return {
             ...question,
             answers: updatedAnswers,
           };
         } else {
-          return { ...question };
+          return question;
         }
       })
     );
   }
+
   function checkAnswers() {
-    setAnswersChecked((prevAnswersChecked) => !prevAnswersChecked);
-  
-    let correctAnswersCount = 0;
-  
-    questions.forEach((question) => {
+    const newAnswersChecked = !answersChecked;
+    setAnswersChecked(newAnswersChecked);
+
+    const correctAnswersCount = questions.reduce((count, question) => {
       const selectedAnswer = selectedAnswers[question.id];
-      
-      if (selectedAnswer && selectedAnswer.isCorrect) {
-        correctAnswersCount += 1;
-      }
-    });
-  
+      return count + (selectedAnswer && selectedAnswer.isCorrect ? 1 : 0);
+    }, 0);
+
     setShowScore(correctAnswersCount);
   }
 
@@ -126,36 +122,30 @@ function App() {
 
   return (
     <main>
-      {
-        !gameStarted 
-        ? 
-        <Starter handleStartBtn={handleStartGame}/>
-        : 
+      {!gameStarted ? (
+        <Starter handleStartBtn={handleStartGame} />
+      ) : (
         questionsEl
-      }
-      
-      {
-        gameStarted && !answersChecked 
-        ?
+      )}
+  
+      {gameStarted && !answersChecked && (
         <div>
           <button className='check_answers-btn' onClick={checkAnswers}>
             Check Answers
           </button>
         </div>
-        :
-        gameStarted && answersChecked ?
+      )}
+  
+      {gameStarted && answersChecked && (
         <div>
           <h2>You scored {showScore}/{questions.length} correct answers</h2>
           <button className='play-again-btn' onClick={handleNewGame}>
             Play Again
           </button>
         </div>
-        :
-
-        ""
-      }
+      )}
     </main>
-  )
+  );
 }
 
 export default App
